@@ -7,6 +7,8 @@ const pages = {
   "/contact": "contact-me.html",
 };
 
+const port = 8080;
+
 async function getFileContents(filePath) {
   try {
     const fileContents = await fs.readFile(filePath);
@@ -16,13 +18,19 @@ async function getFileContents(filePath) {
   }
 }
 
-http
-  .createServer(async function (req, res) {
-    const url = new URL(`http://${req.headers.host}${req.url}`);
+const server = http.createServer(async function (req, res) {
+  const htmlFile = pages[req.url] || "404.html";
 
-    const content = await getFileContents(pages[url.pathname] || "404.html");
+  res.statusCode = htmlFile === "404.html" ? 404 : 200;
 
-    res.writeHead(200, { "Content-Type": "text/html" });
-    res.end(content);
-  })
-  .listen(8080);
+  const content = await getFileContents(htmlFile);
+
+  res.statusCode = 200;
+  res.setHeader("Content-Type", "text/html");
+  res.write(content);
+  res.end();
+});
+
+server.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}/`);
+});
